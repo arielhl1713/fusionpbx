@@ -7,6 +7,15 @@
 require_once dirname(__DIR__, 2) . "/resources/require.php";
 require_once "resources/check_auth.php";
 
+//ensure settings object exists when check_auth is bypassed
+if (!isset($settings) || !is_object($settings)) {
+    $settings = new settings([
+        'database' => $database,
+        'domain_uuid' => $_SESSION['domain_uuid'] ?? '',
+        'user_uuid' => $_SESSION['user_uuid'] ?? ''
+    ]);
+}
+
 //check permissions
 if (!permission_exists('backup_manager_backup')) {
     echo "access denied";
