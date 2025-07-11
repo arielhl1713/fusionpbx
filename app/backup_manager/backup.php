@@ -14,11 +14,11 @@ if (!permission_exists('backup_manager_backup')) {
 }
 
 $settings_file = '/var/backups/backup_settings.json';
-$settings = ['auto_enabled'=>false,'frequency'=>'daily','keep'=>7];
+$backup_settings = ['auto_enabled'=>false,'frequency'=>'daily','keep'=>7];
 if (file_exists($settings_file)) {
     $json = file_get_contents($settings_file);
     $data = json_decode($json, true);
-    if (is_array($data)) $settings = array_merge($settings, $data);
+    if (is_array($data)) $backup_settings = array_merge($backup_settings, $data);
 }
 
 $log_file = '/var/log/fusionpbx/backup_manager.log';
@@ -73,39 +73,56 @@ if (!empty($_GET['delete'])) {
 }
 
 if (isset($_POST['save_settings'])) {
-    $settings['auto_enabled'] = isset($_POST['auto_enabled']);
-    $settings['frequency'] = $_POST['frequency'] ?? 'daily';
-    $settings['keep'] = (int)($_POST['keep'] ?? 7);
-    file_put_contents($settings_file, json_encode($settings));
+    $backup_settings['auto_enabled'] = isset($_POST['auto_enabled']);
+    $backup_settings['frequency'] = $_POST['frequency'] ?? 'daily';
+    $backup_settings['keep'] = (int)($_POST['keep'] ?? 7);
+    file_put_contents($settings_file, json_encode($backup_settings));
     $message = 'Settings saved';
 }
 
+//create csrf token
+$object = new token;
+$token = $object->create('/app/backup_manager/backup.php');
+
+//include the header
+$document['title'] = 'Backup Manager';
 require_once "resources/header.php";
-echo '<h2>Backup Manager</h2>';
+
+//page heading and actions
+echo "<div class='action_bar' id='action_bar'>\n";
+echo "  <div class='heading'><b>Backup Manager</b></div>\n";
+echo "  <div class='actions'>\n";
+echo "      <form id='form_backup' class='inline' method='post'>\n";
+echo "          <input type='hidden' name='action' value='backup'>\n";
+echo "          <input type='hidden' name='".$token['name']."' value='".$token['hash']."'>\n";
+echo button::create(['type'=>'submit','label'=>'Run Backup','icon'=>$settings->get('theme', 'button_icon_refresh'),'id'=>'btn_backup']);
+echo "      </form>\n";
+echo "  </div>\n";
+echo "  <div style='clear: both;'></div>\n";
+echo "</div>\n";
+
 if ($message) {
     echo "<div class='message'>$message</div>";
 }
 
 // settings form
 echo "<form method='post' style='margin-bottom:20px;'>";
+echo "<input type='hidden' name='".$token['name']."' value='".$token['hash']."'>";
 echo "<h3>Auto Backup Settings</h3>";
-echo "<label><input type='checkbox' name='auto_enabled'".($settings['auto_enabled']?' checked':'')."> Enable Auto Backup</label><br>";
+echo "<label><input type='checkbox' name='auto_enabled'".($backup_settings['auto_enabled']?' checked':'')."> Enable Auto Backup</label><br>";
 echo "<label>Frequency:</label>";
 echo "<select name='frequency'>";
 foreach (['daily','weekly','monthly'] as $freq) {
-    $sel = $settings['frequency']==$freq ? 'selected' : '';
+    $sel = $backup_settings['frequency']==$freq ? 'selected' : '';
     echo "<option value='$freq' $sel>$freq</option>";
 }
 echo "</select><br>";
-echo "<label>Keep Backups:</label> <input type='number' name='keep' value='".intval($settings['keep'])."' min='1' style='width:60px;'>";
-echo "<br><button type='submit' name='save_settings' class='btn'>Save Settings</button>";
+echo "<label>Keep Backups:</label> <input type='number' name='keep' value='".intval($backup_settings['keep'])."' min='1' style='width:60px;'>";
+echo "<br>";
+echo button::create(['type'=>'submit','label'=>'Save Settings','icon'=>$settings->get('theme','button_icon_save'),'name'=>'save_settings','id'=>'btn_save']);
 echo "</form>";
 
-// manual backup button
-echo "<form method='post' style='margin-bottom:20px;'>";
-echo "  <input type='hidden' name='action' value='backup' />";
-echo "  <button type='submit' class='btn'>Run Backup</button>";
-echo "</form>";
+// manual backup button moved to action bar
 
 // List existing backups
 $dir = '/var/backups/fusionpbx';
@@ -134,9 +151,9 @@ if (!empty($files)) {
         echo "  <td>".escape($size)."</td>";
         echo "  <td>".escape($date)."</td>";
         echo "  <td class='no-link center'>";
-        echo "    <a href='".$url_restore."'>Restore</a> | ";
-        echo "    <a href='".$url_download."'>Download</a> | ";
-        echo "    <a href='".$url_delete."' onclick=\"return confirm('Delete?');\">Delete</a>";
+        echo button::create(['type'=>'button','label'=>'Restore','icon'=>$settings->get('theme','button_icon_play'),'link'=>$url_restore]);
+        echo button::create(['type'=>'button','label'=>'Download','icon'=>$settings->get('theme','button_icon_download'),'link'=>$url_download]);
+        echo button::create(['type'=>'button','label'=>'Delete','icon'=>$settings->get('theme','button_icon_delete'),'link'=>$url_delete,'onclick'=>"return confirm('Delete?');"]);
         echo "  </td>";
         echo "</tr>";
     }
