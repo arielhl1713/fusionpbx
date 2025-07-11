@@ -80,15 +80,24 @@ if (isset($_POST['save_settings'])) {
     $message = 'Settings saved';
 }
 
+//set the document title
+$document['title'] = 'Backup Manager';
 require_once "resources/header.php";
-echo '<h2>Backup Manager</h2>';
+
+//page heading
+echo "<div class='action_bar' id='action_bar'>\n";
+echo "  <div class='heading'><b>Backup Manager</b></div>\n";
+echo "  <div class='actions'>\n";
+echo "  </div>\n";
+echo "  <div style='clear: both;'></div>\n";
+echo "</div>\n";
 if ($message) {
     echo "<div class='message'>$message</div>";
 }
 
 // settings form
 echo "<form method='post' style='margin-bottom:20px;'>";
-echo "<h3>Auto Backup Settings</h3>";
+echo "<div class='heading'><b>Auto Backup Settings</b></div>";
 echo "<label><input type='checkbox' name='auto_enabled'".($settings['auto_enabled']?' checked':'')."> Enable Auto Backup</label><br>";
 echo "<label>Frequency:</label>";
 echo "<select name='frequency'>";
@@ -98,13 +107,25 @@ foreach (['daily','weekly','monthly'] as $freq) {
 }
 echo "</select><br>";
 echo "<label>Keep Backups:</label> <input type='number' name='keep' value='".intval($settings['keep'])."' min='1' style='width:60px;'>";
-echo "<br><button type='submit' name='save_settings' class='btn'>Save Settings</button>";
+echo button::create([
+    'type'  => 'submit',
+    'label' => 'Save Settings',
+    'icon'  => $settings->get('theme', 'button_icon_save'),
+    'id'    => 'btn_save_settings',
+    'name'  => 'save_settings',
+    'style' => 'margin-top: 15px;'
+]);
 echo "</form>";
 
 // manual backup button
 echo "<form method='post' style='margin-bottom:20px;'>";
 echo "  <input type='hidden' name='action' value='backup' />";
-echo "  <button type='submit' class='btn'>Run Backup</button>";
+echo button::create([
+    'type'  => 'submit',
+    'label' => 'Run Backup',
+    'icon'  => $settings->get('theme', 'button_icon_play'),
+    'id'    => 'btn_run_backup'
+]);
 echo "</form>";
 
 // List existing backups
@@ -113,7 +134,7 @@ $files = array_filter(scandir($dir, SCANDIR_SORT_DESCENDING), function($f) {
     return preg_match('/\.tgz$/', $f);
 });
 if (!empty($files)) {
-    echo '<h3>Available Backups</h3>';
+    echo "<div class='heading'><b>Available Backups</b></div>";
     echo "<div class='card'>";
     echo "<table class='list'>";
     echo "<tr class='list-header'>";
