@@ -13,12 +13,13 @@ if (!permission_exists('backup_manager_backup')) {
     exit;
 }
 
-$settings_file = '/var/backups/backup_settings.json';
-$settings = ['auto_enabled'=>false,'frequency'=>'daily','keep'=>7];
-if (file_exists($settings_file)) {
-    $json = file_get_contents($settings_file);
+//local settings for the backup manager
+$backup_settings_file = '/var/backups/backup_settings.json';
+$backup_settings = ['auto_enabled'=>false,'frequency'=>'daily','keep'=>7];
+if (file_exists($backup_settings_file)) {
+    $json = file_get_contents($backup_settings_file);
     $data = json_decode($json, true);
-    if (is_array($data)) $settings = array_merge($settings, $data);
+    if (is_array($data)) $backup_settings = array_merge($backup_settings, $data);
 }
 
 $log_file = '/var/log/fusionpbx/backup_manager.log';
@@ -73,10 +74,10 @@ if (!empty($_GET['delete'])) {
 }
 
 if (isset($_POST['save_settings'])) {
-    $settings['auto_enabled'] = isset($_POST['auto_enabled']);
-    $settings['frequency'] = $_POST['frequency'] ?? 'daily';
-    $settings['keep'] = (int)($_POST['keep'] ?? 7);
-    file_put_contents($settings_file, json_encode($settings));
+    $backup_settings['auto_enabled'] = isset($_POST['auto_enabled']);
+    $backup_settings['frequency'] = $_POST['frequency'] ?? 'daily';
+    $backup_settings['keep'] = (int)($_POST['keep'] ?? 7);
+    file_put_contents($backup_settings_file, json_encode($backup_settings));
     $message = 'Settings saved';
 }
 
@@ -98,15 +99,15 @@ if ($message) {
 // settings form
 echo "<form method='post' style='margin-bottom:20px;'>";
 echo "<div class='heading'><b>Auto Backup Settings</b></div>";
-echo "<label><input type='checkbox' name='auto_enabled'".($settings['auto_enabled']?' checked':'')."> Enable Auto Backup</label><br>";
+echo "<label><input type='checkbox' name='auto_enabled'".($backup_settings['auto_enabled']?' checked':'')."> Enable Auto Backup</label><br>";
 echo "<label>Frequency:</label>";
 echo "<select name='frequency'>";
 foreach (['daily','weekly','monthly'] as $freq) {
-    $sel = $settings['frequency']==$freq ? 'selected' : '';
+    $sel = $backup_settings['frequency']==$freq ? 'selected' : '';
     echo "<option value='$freq' $sel>$freq</option>";
 }
 echo "</select><br>";
-echo "<label>Keep Backups:</label> <input type='number' name='keep' value='".intval($settings['keep'])."' min='1' style='width:60px;'>";
+echo "<label>Keep Backups:</label> <input type='number' name='keep' value='".intval($backup_settings['keep'])."' min='1' style='width:60px;'>";
 echo button::create([
     'type'  => 'submit',
     'label' => 'Save Settings',
