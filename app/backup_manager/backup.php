@@ -104,7 +104,7 @@ echo "  <div class='actions'>\n";
 echo "      <form id='form_backup' class='inline' method='post'>\n";
 echo "          <input type='hidden' name='action' value='backup'>\n";
 echo "          <input type='hidden' name='".$token['name']."' value='".$token['hash']."'>\n";
-echo button::create(['type'=>'submit','label'=>'Run Backup','icon'=>$settings->get('theme', 'button_icon_refresh'),'id'=>'btn_backup']);
+echo button::create(['type'=>'submit','label'=>'Run Backup','icon'=>$settings->get('theme', 'button_icon_play'),'id'=>'btn_backup']);
 echo "      </form>\n";
 echo "  </div>\n";
 echo "  <div style='clear: both;'></div>\n";
@@ -160,7 +160,7 @@ if (!empty($files)) {
         echo "  <td>".escape($size)."</td>";
         echo "  <td>".escape($date)."</td>";
         echo "  <td class='no-link center'>";
-        echo button::create(['type'=>'button','label'=>'Restore','icon'=>$settings->get('theme','button_icon_play'),'link'=>$url_restore]);
+        echo button::create(['type'=>'button','label'=>'Restore','icon'=>$settings->get('theme','button_icon_refresh'),'link'=>$url_restore]);
         echo button::create(['type'=>'button','label'=>'Download','icon'=>$settings->get('theme','button_icon_download'),'link'=>$url_download]);
         echo button::create(['type'=>'button','label'=>'Delete','icon'=>$settings->get('theme','button_icon_delete'),'link'=>$url_delete,'onclick'=>"return confirm('Delete?');"]);
         echo "  </td>";
