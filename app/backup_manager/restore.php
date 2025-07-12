@@ -30,17 +30,32 @@ if (!empty($_POST['action']) && $_POST['action'] === 'restore') {
     $output = array_merge($pre_output, $output);
 }
 
+//create csrf token
+$object = new token;
+$token = $object->create('/app/backup_manager/restore.php');
+
+//include the header
+$document['title'] = 'Restore Manager';
 require_once "resources/header.php";
-echo '<h2>Restore Manager</h2>';
+
+//form start and action bar
+echo "<form id='form_restore' method='post'>";
+echo "<input type='hidden' name='action' value='restore'>";
+echo "<input type='hidden' name='".$token['name']."' value='".$token['hash']."'>";
+echo "<div class='action_bar' id='action_bar'>\n";
+echo "  <div class='heading'><b>Restore Manager</b></div>\n";
+echo "  <div class='actions'>\n";
+echo button::create(['type'=>'submit','label'=>'Run Restore','icon'=>$settings->get('theme','button_icon_play'),'id'=>'btn_restore']);
+echo "  </div>\n";
+echo "  <div style='clear: both;'></div>\n";
+echo "</div>\n";
+
 if ($message) {
     echo "<div class='message'>$message</div>";
     if (!empty($output)) {
         echo '<pre>' . htmlspecialchars(implode(PHP_EOL, $output)) . '</pre>';
     }
 }
-
-echo '<form method="post">';
-echo '<input type="hidden" name="action" value="restore" />';
 
 echo '<label>Select Backup File:</label><br/>';
 echo '<select name="backup_file">';
@@ -54,7 +69,6 @@ echo '<label>Restore Type:</label><br/>';
 echo '<label><input type="radio" name="restore_option" value="full" checked /> Full Backup</label><br/>';
 echo '<label><input type="radio" name="restore_option" value="media" /> Recordings, Music & Storage Only</label><br/><br/>';
 
-echo '<button type="submit" class="btn">Run Restore</button>';
 echo '</form>';
 
 require_once "resources/footer.php";
