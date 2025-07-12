@@ -22,7 +22,7 @@ if (!permission_exists('backup_manager_backup')) {
     exit;
 }
 
-$settings_file = '/var/backups/backup_settings.json';
+$settings_file = '/var/backups/fusionpbx/backup_settings.json';
 $backup_settings = ['auto_enabled'=>false,'frequency'=>'daily','keep'=>7];
 if (file_exists($settings_file)) {
     $json = file_get_contents($settings_file);
