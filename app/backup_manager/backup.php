@@ -81,6 +81,29 @@ if (!empty($_GET['delete'])) {
     }
 }
 
+if (!empty($_POST['action']) && $_POST['action'] === 'upload' && !empty($_FILES['backup_file']['tmp_name'])) {
+    $upload_name = basename($_FILES['backup_file']['name']);
+    if (preg_match('/\.tgz$/', $upload_name)) {
+        $target = '/var/backups/fusionpbx/' . $upload_name;
+        if (file_exists($target)) {
+            $message = 'File already exists.';
+        }
+        else {
+            if (move_uploaded_file($_FILES['backup_file']['tmp_name'], $target)) {
+                $message = 'Backup uploaded.';
+            }
+            else {
+                $err = error_get_last();
+                $error_msg = $err['message'] ?? 'unknown error';
+                $message = 'Upload failed: ' . $error_msg;
+            }
+        }
+    }
+    else {
+        $message = 'Invalid file type.';
+    }
+}
+
 if (isset($_POST['save_settings'])) {
     $backup_settings['auto_enabled'] = isset($_POST['auto_enabled']);
     $backup_settings['frequency'] = $_POST['frequency'] ?? 'daily';
@@ -105,6 +128,17 @@ echo "      <form id='form_backup' class='inline' method='post'>\n";
 echo "          <input type='hidden' name='action' value='backup'>\n";
 echo "          <input type='hidden' name='".$token['name']."' value='".$token['hash']."'>\n";
 echo button::create(['type'=>'submit','label'=>'Run Backup','icon'=>$settings->get('theme', 'button_icon_play'),'id'=>'btn_backup']);
+echo "      </form>\n";
+echo "      <form id='form_upload' class='inline' method='post' enctype='multipart/form-data'>\n";
+echo "          <input type='hidden' name='action' value='upload'>\n";
+echo "          <input type='hidden' name='".$token['name']."' value='".$token['hash']."'>\n";
+echo button::create(['type'=>'button','label'=>'Upload','icon'=>$settings->get('theme','button_icon_add'),'id'=>'btn_upload','style'=>'margin-left: 15px;','onclick'=>"$(this).fadeOut(250, function(){ $('span#form_upload').fadeIn(250); document.getElementById('ulfile').click(); });"]);
+echo "          <span id='form_upload' style='display: none;'>";
+echo button::create(['label'=>'Cancel','icon'=>$settings->get('theme','button_icon_cancel'),'type'=>'button','id'=>'btn_upload_cancel','style'=>'margin-left: 15px;','onclick'=>"$('span#form_upload').fadeOut(250, function(){ document.getElementById('form_upload').reset(); $('#btn_upload').fadeIn(250) });"]);
+echo "              <input type='text' class='txt' style='width: 100px; cursor: pointer;' id='filename' placeholder='Select...' onclick=\"document.getElementById('ulfile').click(); this.blur();\" onfocus='this.blur();'>";
+echo "              <input type='file' id='ulfile' name='backup_file' style='display: none;' accept='.tgz' onchange=\"document.getElementById('filename').value = this.files.item(0).name;\">";
+echo button::create(['type'=>'submit','label'=>'Upload','icon'=>$settings->get('theme','button_icon_upload')]);
+echo "          </span>\n";
 echo "      </form>\n";
 echo "  </div>\n";
 echo "  <div style='clear: both;'></div>\n";
