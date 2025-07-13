@@ -37,7 +37,8 @@ if (file_exists($settings_file)) {
     if (is_array($data)) $backup_settings = array_merge($backup_settings, $data);
 }
 
-function update_backup_cron(array $settings): void {
+function update_backup_cron(array $settings): bool {
+    global $log_file;
     $cron_id = '# fusionpbx-auto-backup';
     $script = '/var/www/fusionpbx/app/backup_manager/scripts/fusionpbx-backup-manager.sh';
     [$hour, $minute] = explode(':', $settings['time']);
@@ -71,8 +72,12 @@ function update_backup_cron(array $settings): void {
     }
     $tmp = tempnam(sys_get_temp_dir(), 'cron');
     file_put_contents($tmp, implode("\n", $lines) . "\n");
-    exec('sudo crontab ' . escapeshellarg($tmp));
+    $output = [];
+    exec('sudo crontab ' . escapeshellarg($tmp) . ' 2>&1', $output, $result);
+    $log_entry = date('Y-m-d H:i:s') . " update_backup_cron\nCMD: sudo crontab " . escapeshellarg($tmp) . "\nSTATUS: $result\n" . implode(PHP_EOL, $output) . "\n\n";
+    error_log($log_entry, 3, $log_file);
     unlink($tmp);
+    return $result === 0;
 }
 
 $log_file = '/var/log/fusionpbx/backup_manager.log';
@@ -157,8 +162,12 @@ if (isset($_POST['save_settings'])) {
     $backup_settings['day_of_week'] = isset($_POST['day_of_week']) ? (int)$_POST['day_of_week'] : 0;
     $backup_settings['day_of_month'] = isset($_POST['day_of_month']) ? (int)$_POST['day_of_month'] : 1;
     file_put_contents($settings_file, json_encode($backup_settings));
-    update_backup_cron($backup_settings);
-    $message = 'Settings saved';
+    if (update_backup_cron($backup_settings)) {
+        $message = 'Settings saved';
+    }
+    else {
+        $message = 'Settings saved, but failed to update cron. Check logs.';
+    }
 }
 
 //create csrf token
