@@ -37,6 +37,14 @@ tar -zcf "$BASEDIR/backup_${now}.tgz" \
   /var/lib/freeswitch/storage \
   /etc/dehydrated
 
-KEEP_DAYS="${KEEP_DAYS:-7}"
-find "$BASEDIR" -type f -mtime +"$KEEP_DAYS" -delete
+KEEP_COUNT="${KEEP_COUNT:-7}"
+mapfile -t backups < <(ls -1t "$BASEDIR"/backup_*.tgz 2>/dev/null || true)
+if (( ${#backups[@]} > KEEP_COUNT )); then
+  for file in "${backups[@]:KEEP_COUNT}"; do
+    rm -f "$file"
+    if [[ $file =~ backup_(.*)\.tgz$ ]]; then
+      rm -f "$BASEDIR/postgresql/fusionpbx_${BASH_REMATCH[1]}.sql"
+    fi
+  done
+fi
 
