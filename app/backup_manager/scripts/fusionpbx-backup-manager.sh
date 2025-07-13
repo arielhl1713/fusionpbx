@@ -37,5 +37,6 @@ tar -zcf "$BASEDIR/backup_${now}.tgz" \
   /var/lib/freeswitch/storage \
   /etc/dehydrated
 
-find "$BASEDIR" -type f -mtime +7 -delete
+KEEP_DAYS="${KEEP_DAYS:-7}"
+find "$BASEDIR" -type f -mtime +"$KEEP_DAYS" -delete
 
