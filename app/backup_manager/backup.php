@@ -52,7 +52,7 @@ function update_backup_cron(array $settings): bool {
             $day_of_month = (int)$settings['day_of_month'];
             break;
     }
-    $entry = sprintf('%d %d %s * %s KEEP_DAYS=%d sudo %s > /dev/null 2>&1 %s',
+    $entry = sprintf('%d %d %s * %s KEEP_COUNT=%d sudo %s > /dev/null 2>&1 %s',
         (int)$minute,
         (int)$hour,
         $day_of_month,
