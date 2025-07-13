@@ -23,7 +23,14 @@ if (!permission_exists('backup_manager_backup')) {
 }
 
 $settings_file = '/var/backups/fusionpbx/backup_settings.json';
-$backup_settings = ['auto_enabled'=>false,'frequency'=>'daily','keep'=>7];
+$backup_settings = [
+    'auto_enabled'  => false,
+    'frequency'     => 'daily',
+    'keep'          => 7,
+    'time'          => '02:00',
+    'day_of_week'   => 0,
+    'day_of_month'  => 1
+];
 if (file_exists($settings_file)) {
     $json = file_get_contents($settings_file);
     $data = json_decode($json, true);
@@ -108,6 +115,9 @@ if (isset($_POST['save_settings'])) {
     $backup_settings['auto_enabled'] = isset($_POST['auto_enabled']);
     $backup_settings['frequency'] = $_POST['frequency'] ?? 'daily';
     $backup_settings['keep'] = (int)($_POST['keep'] ?? 7);
+    $backup_settings['time'] = $_POST['time'] ?? '02:00';
+    $backup_settings['day_of_week'] = isset($_POST['day_of_week']) ? (int)$_POST['day_of_week'] : 0;
+    $backup_settings['day_of_month'] = isset($_POST['day_of_month']) ? (int)$_POST['day_of_month'] : 1;
     file_put_contents($settings_file, json_encode($backup_settings));
     $message = 'Settings saved';
 }
@@ -154,16 +164,49 @@ echo "<input type='hidden' name='".$token['name']."' value='".$token['hash']."'>
 echo "<h3>Auto Backup Settings</h3>";
 echo "<label><input type='checkbox' name='auto_enabled'".($backup_settings['auto_enabled']?' checked':'')."> Enable Auto Backup</label><br>";
 echo "<label>Frequency:</label>";
-echo "<select name='frequency'>";
+echo "<select name='frequency' id='frequency'>";
 foreach (['daily','weekly','monthly'] as $freq) {
     $sel = $backup_settings['frequency']==$freq ? 'selected' : '';
     echo "<option value='$freq' $sel>$freq</option>";
 }
 echo "</select><br>";
+
+echo "<div id='weekly_div' style='display:none;'>";
+echo "<label>Day of Week:</label>";
+echo "<select name='day_of_week'>";
+for ($i=0; $i<7; $i++) {
+    $day = date('l', strtotime('Sunday +'.$i.' days'));
+    $sel = ($backup_settings['day_of_week'] == $i) ? 'selected' : '';
+    echo "<option value='$i' $sel>$day</option>";
+}
+echo "</select><br>";
+echo "</div>";
+
+echo "<div id='monthly_div' style='display:none;'>";
+echo "<label>Day of Month:</label> <input type='number' name='day_of_month' value='".intval($backup_settings['day_of_month'])."' min='1' max='31' style='width:60px;'>";
+echo "<br></div>";
+
+echo "<label>Time:</label> <input type='text' class='formfld' name='time' id='backup_time' value='".escape($backup_settings['time'])."' data-toggle='datetimepicker' data-target='#backup_time' onblur=\"$(this).datetimepicker('hide');\" style='width:75px;'>";
+echo "<br>";
+
 echo "<label>Keep Backups:</label> <input type='number' name='keep' value='".intval($backup_settings['keep'])."' min='1' style='width:60px;'>";
 echo "<br>";
 echo button::create(['type'=>'submit','label'=>'Save Settings','icon'=>$settings->get('theme','button_icon_save'),'name'=>'save_settings','id'=>'btn_save']);
 echo "</form>";
+echo "<script type='text/javascript'>\n";
+echo "$(function(){\n";
+echo "  $('#backup_time').datetimepicker({ format: 'HH:mm' });\n";
+echo "  function toggle() {\n";
+echo "    var f = $('#frequency').val();\n";
+echo "    $('#weekly_div').hide();\n";
+echo "    $('#monthly_div').hide();\n";
+echo "    if (f == 'weekly') $('#weekly_div').show();\n";
+echo "    if (f == 'monthly') $('#monthly_div').show();\n";
+echo "  }\n";
+echo "  $('#frequency').on('change', toggle);\n";
+echo "  toggle();\n";
+echo "});\n";
+echo "</script>";
 
 // manual backup button moved to action bar
 
