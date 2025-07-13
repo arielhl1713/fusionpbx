@@ -37,6 +37,44 @@ if (file_exists($settings_file)) {
     if (is_array($data)) $backup_settings = array_merge($backup_settings, $data);
 }
 
+function update_backup_cron(array $settings): void {
+    $cron_id = '# fusionpbx-auto-backup';
+    $script = '/var/www/fusionpbx/app/backup_manager/scripts/fusionpbx-backup-manager.sh';
+    [$hour, $minute] = explode(':', $settings['time']);
+    $day_of_month = '*';
+    $day_of_week = '*';
+    switch ($settings['frequency']) {
+        case 'weekly':
+            $day_of_week = (int)$settings['day_of_week'];
+            break;
+        case 'monthly':
+            $day_of_month = (int)$settings['day_of_month'];
+            break;
+    }
+    $entry = sprintf('%d %d %s * %s KEEP_DAYS=%d sudo %s > /dev/null 2>&1 %s',
+        (int)$minute,
+        (int)$hour,
+        $day_of_month,
+        $day_of_week,
+        (int)$settings['keep'],
+        $script,
+        $cron_id
+    );
+
+    $lines = [];
+    exec('sudo crontab -l 2>/dev/null', $lines, $status);
+    $lines = array_filter($lines, function($line) use ($cron_id) {
+        return strpos($line, $cron_id) === false;
+    });
+    if ($settings['auto_enabled']) {
+        $lines[] = $entry;
+    }
+    $tmp = tempnam(sys_get_temp_dir(), 'cron');
+    file_put_contents($tmp, implode("\n", $lines) . "\n");
+    exec('sudo crontab ' . escapeshellarg($tmp));
+    unlink($tmp);
+}
+
 $log_file = '/var/log/fusionpbx/backup_manager.log';
 if (!file_exists(dirname($log_file))) {
     mkdir(dirname($log_file), 0755, true);
@@ -119,6 +157,7 @@ if (isset($_POST['save_settings'])) {
     $backup_settings['day_of_week'] = isset($_POST['day_of_week']) ? (int)$_POST['day_of_week'] : 0;
     $backup_settings['day_of_month'] = isset($_POST['day_of_month']) ? (int)$_POST['day_of_month'] : 1;
     file_put_contents($settings_file, json_encode($backup_settings));
+    update_backup_cron($backup_settings);
     $message = 'Settings saved';
 }
 
