@@ -37,9 +37,11 @@ tar -zcf "$BASEDIR/backup_${now}.tgz" \
   /var/lib/freeswitch/storage \
   /etc/dehydrated
 
-KEEP_COUNT="${KEEP_COUNT:-7}"
+# allow keep count via first argument or environment variable; default to 7
+KEEP_COUNT="${1:-${KEEP_COUNT:-7}}"
+
 mapfile -t backups < <(ls -1t "$BASEDIR"/backup_*.tgz 2>/dev/null || true)
-if (( ${#backups[@]} > KEEP_COUNT )); then
+if (( KEEP_COUNT > 0 && ${#backups[@]} > KEEP_COUNT )); then
   for file in "${backups[@]:KEEP_COUNT}"; do
     rm -f "$file"
     if [[ $file =~ backup_(.*)\.tgz$ ]]; then
