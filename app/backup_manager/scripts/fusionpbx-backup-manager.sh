@@ -10,6 +10,7 @@ mkdir -p "$BASEDIR/postgresql"
 now=$(date +"%Y%m%d_%H%M%S")
 
 CONFIG_FILE=/etc/fusionpbx/config.conf
+SETTINGS_FILE="$BASEDIR/backup_settings.json"
 
 _read_conf() {
   local key="$1"
@@ -37,8 +38,12 @@ tar -zcf "$BASEDIR/backup_${now}.tgz" \
   /var/lib/freeswitch/storage \
   /etc/dehydrated
 
-# allow keep count via first argument or environment variable; default to 7
-KEEP_COUNT="${1:-${KEEP_COUNT:-7}}"
+# determine keep count
+KEEP_COUNT="${1:-${KEEP_COUNT:-}}"
+if [[ -z "$KEEP_COUNT" && -f "$SETTINGS_FILE" ]]; then
+  KEEP_COUNT=$(php -r "echo (int)json_decode(file_get_contents('$SETTINGS_FILE'), true)['keep'];")
+fi
+KEEP_COUNT="${KEEP_COUNT:-7}"
 
 mapfile -t backups < <(ls -1t "$BASEDIR"/backup_*.tgz 2>/dev/null || true)
 if (( KEEP_COUNT > 0 && ${#backups[@]} > KEEP_COUNT )); then

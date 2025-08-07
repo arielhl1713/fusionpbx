@@ -52,13 +52,12 @@ function update_backup_cron(array $settings): bool {
             $day_of_month = (int)$settings['day_of_month'];
             break;
     }
-    $entry = sprintf('%d %d %s * %s sudo %s %d > /dev/null 2>&1 %s',
+    $entry = sprintf('%d %d %s * %s sudo %s > /dev/null 2>&1 %s',
         (int)$minute,
         (int)$hour,
         $day_of_month,
         $day_of_week,
         $script,
-        (int)$settings['keep'],
         $cron_id
     );
 
@@ -89,8 +88,7 @@ if (!empty($_POST['action']) && $_POST['action'] === 'backup') {
     // Path to your backup script
     $script = '/var/www/fusionpbx/app/backup_manager/scripts/fusionpbx-backup-manager.sh';
     // Execute backup (ensure www-data has sudo rights for this script)
-    $keep = (int)$backup_settings['keep'];
-    $cmd = 'sudo ' . escapeshellarg($script) . ' ' . $keep . ' 2>&1';
+    $cmd = 'sudo ' . escapeshellarg($script) . ' 2>&1';
     exec($cmd, $output, $status);
     $log_entry = date('Y-m-d H:i:s') . "\nCMD: $cmd\n" .
         "STATUS: $status\n" .
