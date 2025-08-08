@@ -48,10 +48,17 @@ KEEP_COUNT="${KEEP_COUNT:-7}"
 mapfile -t backups < <(ls -1t "$BASEDIR"/backup_*.tgz 2>/dev/null || true)
 if (( KEEP_COUNT > 0 && ${#backups[@]} > KEEP_COUNT )); then
   for file in "${backups[@]:KEEP_COUNT}"; do
-    rm -f "$file"
-    if [[ $file =~ backup_(.*)\.tgz$ ]]; then
-      rm -f "$BASEDIR/postgresql/fusionpbx_${BASH_REMATCH[1]}.sql"
-    fi
+    ts=${file##*/}               # strip path
+    ts=${ts#backup_}             # strip prefix
+    ts=${ts%.tgz}                # strip extension
+    rm -f "$file" "$BASEDIR/postgresql/fusionpbx_${ts}.sql"
   done
 fi
+
+# cleanup orphaned sql dumps
+shopt -s nullglob
+for sql in "$BASEDIR"/postgresql/fusionpbx_*.sql; do
+  ts=${sql##*/}; ts=${ts#fusionpbx_}; ts=${ts%.sql}
+  [[ -f "$BASEDIR/backup_${ts}.tgz" ]] || rm -f "$sql"
+done
 
