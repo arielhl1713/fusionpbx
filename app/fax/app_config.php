@@ -504,10 +504,19 @@
 		$apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
 		$apps[$x]['default_settings'][$y]['default_setting_value'] = "300-399";
 		$apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
-		$apps[$x]['default_settings'][$y]['default_setting_description'] = "Set the suggested extension range(s) for fax servers";
+                $apps[$x]['default_settings'][$y]['default_setting_description'] = "Set the suggested extension range(s) for fax servers";
 
-	//schema details
-		$y=0;
+                $y++;
+                $apps[$x]['default_settings'][$y]['default_setting_uuid'] = "f5e80267-2cc0-4d43-b284-f81f49c30e8d";
+                $apps[$x]['default_settings'][$y]['default_setting_category'] = "fax";
+                $apps[$x]['default_settings'][$y]['default_setting_subcategory'] = "telnyx_token";
+                $apps[$x]['default_settings'][$y]['default_setting_name'] = "text";
+                $apps[$x]['default_settings'][$y]['default_setting_value'] = "";
+                $apps[$x]['default_settings'][$y]['default_setting_enabled'] = "false";
+                $apps[$x]['default_settings'][$y]['default_setting_description'] = "SIP X-Telnyx-Token header value.";
+
+        //schema details
+                $y=0;
 		$apps[$x]['db'][$y]['table']['name'] = "v_fax";
 		$apps[$x]['db'][$y]['table']['parent'] = "";
 		$z=0;

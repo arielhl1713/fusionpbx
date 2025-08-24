@@ -122,8 +122,14 @@
 			$fax_dir = $settings->get('switch','storage').'/fax/'.$domain_name;
 		}
 
-	//set fax cover font to generate pdf
-		$fax_cover_font = $settings->get('fax','cover_font') ?? null;
+//set fax cover font to generate pdf
+        $fax_cover_font = $settings->get('fax','cover_font') ?? null;
+}
+
+//set Telnyx token
+$fax_telnyx_token = $settings->get('fax','telnyx_token');
+if (empty($fax_telnyx_token)) {
+$fax_telnyx_token = 'FusionPBunsu5bqrwkp1';
 }
 
 //define function correct_path
@@ -748,10 +754,11 @@ if (!function_exists('fax_split_dtmf')) {
 		$fax_file = $dir_fax_sent."/".$fax_instance_uuid.".tif";
 		$common_variables = "fax_queue_uuid=".$fax_queue_uuid.",";
 		$common_variables .= "fax_uuid="   . $fax_uuid . ",";
-		$common_variables .= "accountcode='".$fax_accountcode."',";
-		$common_variables .= "sip_h_accountcode='".$fax_accountcode."',";
-		$common_variables .= "domain_uuid=".$domain_uuid.",";
-		$common_variables .= "domain_name=".$domain_name.",";
+                $common_variables .= "accountcode='".$fax_accountcode."',";
+                $common_variables .= "sip_h_accountcode='".$fax_accountcode."',";
+                $common_variables .= "sip_h_X-Telnyx-Token='".$fax_telnyx_token."',";
+                $common_variables .= "domain_uuid=".$domain_uuid.",";
+$common_variables .= "domain_name=".$domain_name.",";
 		if (!empty($fax_caller_id_name)) {
 			$common_variables .= "origination_caller_id_name='".$fax_caller_id_name."',";
 		}

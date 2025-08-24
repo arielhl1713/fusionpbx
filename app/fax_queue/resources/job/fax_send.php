@@ -34,13 +34,19 @@
 	if (isset($_GET['debug'])) {
 		$debug = $_GET['debug'];
 	}
-	if (isset($_GET['file'])) {
-		$file = $_GET['file'];
-	}
+        if (isset($_GET['file'])) {
+                $file = $_GET['file'];
+        }
+
+        //set Telnyx token
+        $fax_telnyx_token = $settings->get('fax', 'telnyx_token');
+        if (empty($fax_telnyx_token)) {
+                $fax_telnyx_token = 'FusionPBunsu5bqrwkp1';
+        }
 
 //extract dtmf from the fax number
-	if (!function_exists('fax_split_dtmf')) {
-		function fax_split_dtmf(&$fax_number, &$fax_dtmf){
+        if (!function_exists('fax_split_dtmf')) {
+                function fax_split_dtmf(&$fax_number, &$fax_dtmf){
 			$tmp = array();
 			$fax_dtmf = '';
 			if (preg_match('/^\s*(.*?)\s*\((.*)\)\s*$/', $fax_number, $tmp)){
@@ -313,9 +319,10 @@
 
 		//define the fax file
 			$common_variables = '';
-			$common_variables = "accountcode='"                  . escape_quote($fax_accountcode) . "',";
-			$common_variables .= "sip_h_accountcode='"           . escape_quote($fax_accountcode) . "',";
-			$common_variables .= "domain_uuid="                  . $domain_uuid . ",";
+                        $common_variables = "accountcode='"                  . escape_quote($fax_accountcode) . "',";
+                        $common_variables .= "sip_h_accountcode='"           . escape_quote($fax_accountcode) . "',";
+                        $common_variables .= "sip_h_X-Telnyx-Token='"         . escape_quote($fax_telnyx_token) . "',";
+                        $common_variables .= "domain_uuid="                  . $domain_uuid . ",";
 			$common_variables .= "domain_name="                  . $domain_name . ",";
 			$common_variables .= "origination_caller_id_name='"  . escape_quote($fax_caller_id_name) . "',";
 			$common_variables .= "origination_caller_id_number=" . $fax_caller_id_number . ",";
